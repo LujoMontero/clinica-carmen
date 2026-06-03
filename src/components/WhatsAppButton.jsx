@@ -3,7 +3,7 @@ import { WhatsAppIcon } from './WhatsAppIcon'
 
 export default function WhatsAppButton() {
   const [isHovered, setIsHovered] = useState(false)
-  const msg = encodeURIComponent('Hola, me gustaría agendar una consulta con la Dra. Carmen Montero.')
+  const msg = encodeURIComponent('Hola, me gustaría consultar con la Dra. Carmen Montero. Mas información, por favor.')
   const url = `https://wa.me/56964322438?text=${msg}`
 
   return (
