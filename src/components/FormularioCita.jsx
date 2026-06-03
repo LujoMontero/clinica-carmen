@@ -1,99 +1,167 @@
-import { useState, useEffect, useCallback } from 'react'
-import emailjs from '@emailjs/browser'
+import { useState, useEffect, useCallback } from "react";
+import emailjs from "@emailjs/browser";
 
-const SERVICE_ID = 'service_4og8nts'
-const TEMPLATE_CLIENTE = 'template_bmqcoc7'
-const TEMPLATE_DOCTOR = 'template_lu9k4r7'
-const PUBLIC_KEY = 'Jguslyt-t5XNGcNi3'
+const SERVICE_ID = "service_4og8nts";
+const TEMPLATE_CLIENTE = "template_bmqcoc7";
+const TEMPLATE_DOCTOR = "template_lu9k4r7";
+const PUBLIC_KEY = "Jguslyt-t5XNGcNi3";
 
 const tratamientos = [
-  { icon: '✨', nombre: 'Limpiezas Faciales' },
-  { icon: '💉', nombre: 'Botox' },
-  { icon: '🌿', nombre: 'Bioestimuladores' },
-  { icon: '💧', nombre: 'Sueroterapia' },
-  { icon: '⭐', nombre: 'Mesoterapia con Vitaminas' },
-  { icon: '👃', nombre: 'Rinomodelación' },
-  { icon: '💋', nombre: 'Lips Glow' },
-]
+  { icon: "✨", nombre: "Limpiezas Faciales" },
+  { icon: "💉", nombre: "Botox" },
+  { icon: "🌿", nombre: "Bioestimuladores" },
+  { icon: "💧", nombre: "Sueroterapia" },
+  { icon: "⭐", nombre: "Mesoterapia con Vitaminas" },
+  { icon: "👃", nombre: "Rinomodelación" },
+  { icon: "💋", nombre: "Lips Glow" },
+];
 
-const horarios = ['08:00', '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00']
+const horarios = [
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+];
 
 function getDias() {
-  const dias = []
-  const hoy = new Date()
+  const dias = [];
+  const hoy = new Date();
   for (let i = 1; i <= 30; i++) {
-    const d = new Date(hoy)
-    d.setDate(hoy.getDate() + i)
-    if (d.getDay() !== 0) dias.push(d)
-    if (dias.length === 14) break
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() + i);
+    if (d.getDay() !== 0) dias.push(d);
+    if (dias.length === 14) break;
   }
-  return dias
+  return dias;
 }
 
-const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const DIAS_SEMANA = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const MESES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
 
 export default function FormularioCita({ abierto, onCerrar }) {
-  const [paso, setPaso] = useState(1)
-  const [direccion, setDireccion] = useState(null)
-  const [form, setForm] = useState({ 
-    tratamiento: '', 
-    dia: null, 
-    horario: '', 
-    nombre: '', 
-    telefono: '', 
-    correo: '' 
-  })
-  const [enviando, setEnviando] = useState(false)
-  const [enviado, setEnviado] = useState(false)
-  const [error, setError] = useState('')
+  const [paso, setPaso] = useState(1);
+  const [direccion, setDireccion] = useState(null);
+  const [form, setForm] = useState({
+    tratamiento: "",
+    dia: null,
+    horario: "",
+    nombre: "",
+    telefono: "",
+    correo: "",
+  });
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState("");
 
-  const dias = getDias()
+  const dias = getDias();
 
   // Lock body scroll cuando modal está abierto
   useEffect(() => {
     if (abierto) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ''
+      document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = '' }
-  }, [abierto])
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [abierto]);
 
   const handleCerrar = useCallback(() => {
-    setPaso(1)
-    setForm({ tratamiento: '', dia: null, horario: '', nombre: '', telefono: '', correo: '' })
-    setEnviado(false)
-    setError('')
-    setDireccion(null)
-    onCerrar()
-  }, [onCerrar])
+    setPaso(1);
+    setForm({
+      tratamiento: "",
+      dia: null,
+      horario: "",
+      nombre: "",
+      telefono: "",
+      correo: "",
+    });
+    setEnviado(false);
+    setError("");
+    setDireccion(null);
+    onCerrar();
+  }, [onCerrar]);
 
-  const avanzarPaso = useCallback((nuevoPaso) => {
-    setDireccion(nuevoPaso > paso ? 'next' : 'prev')
-    setPaso(nuevoPaso)
-  }, [paso])
+  const avanzarPaso = useCallback(
+    (nuevoPaso) => {
+      setDireccion(nuevoPaso > paso ? "next" : "prev");
+      setPaso(nuevoPaso);
+    },
+    [paso]
+  );
 
   const handleSubmit = async () => {
     if (!form.nombre.trim() || !form.telefono.trim() || !form.correo.trim()) {
-      setError('Por favor completa todos los campos.')
-      return
-    }
-    
-    // Validación de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(form.correo)) {
-      setError('Por favor ingresa un correo válido.')
-      return
+      setError("Por favor completa todos los campos.");
+      return;
     }
 
-    setError('')
-    setEnviando(true)
-    
-    const diaStr = form.dia 
-      ? `${DIAS_SEMANA[form.dia.getDay()]} ${form.dia.getDate()} de ${MESES[form.dia.getMonth()]}`
-      : ''
-    
+    // Validación de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.correo)) {
+      setError("Por favor ingresa un correo válido.");
+      return;
+    }
+
+    setError("");
+    setEnviando(true);
+
+    const diaStr = form.dia
+      ? `${DIAS_SEMANA[form.dia.getDay()]} ${form.dia.getDate()} de ${
+          MESES[form.dia.getMonth()]
+        }`
+      : "";
+
+    // Generar link de Google Calendar
+    const generarLinkCalendario = () => {
+      if (!form.dia || !form.horario) return "";
+
+      const [horas, minutos] = form.horario.split(":").map(Number);
+
+      const inicio = new Date(form.dia);
+      inicio.setHours(horas, minutos || 0, 0, 0);
+
+      const fin = new Date(inicio);
+      fin.setHours(fin.getHours() + 1);
+
+      const formatFecha = (d) =>
+        d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
+      const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: `Consulta - Dra. Carmen Montero (${form.tratamiento})`,
+        dates: `${formatFecha(inicio)}/${formatFecha(fin)}`,
+        details: `Tratamiento: ${form.tratamiento}\nDra. Carmen Montero - Médico Estético\nTeléfono: +56 9 6432 2438`,
+        location: "Av. Libertad 269, Piso 6, Oficina 602, Viña del Mar",
+        sf: "true",
+        output: "xml",
+      });
+
+      return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    };
+
+    const linkCalendario = generarLinkCalendario();
+
     const params = {
       nombre: form.nombre,
       telefono: form.telefono,
@@ -101,49 +169,61 @@ export default function FormularioCita({ abierto, onCerrar }) {
       especialidad: form.tratamiento,
       dia: diaStr,
       horario: form.horario,
-    }
+      link_calendario: linkCalendario,
+    };
 
     try {
       await Promise.all([
         emailjs.send(SERVICE_ID, TEMPLATE_CLIENTE, params, PUBLIC_KEY),
-        emailjs.send(SERVICE_ID, TEMPLATE_DOCTOR, params, PUBLIC_KEY)
-      ])
-      setEnviado(true)
-      setPaso(5)
+        emailjs.send(SERVICE_ID, TEMPLATE_DOCTOR, params, PUBLIC_KEY),
+      ]);
+      setEnviado(true);
+      setPaso(5);
     } catch (err) {
-      console.error('Error enviando email:', err)
-      setError('Hubo un problema al enviar. Llámanos al +56 9 6432 2438.')
+      console.error("Error enviando email:", err);
+      setError("Hubo un problema al enviar. Llámanos al +56 9 6432 2438.");
     } finally {
-      setEnviando(false)
+      setEnviando(false);
     }
-  }
+  };
 
-  const titulos = ['', 'Tratamiento', 'Fecha', 'Horario', 'Tus datos', 'Confirmación']
+  const titulos = [
+    "",
+    "Tratamiento",
+    "Fecha",
+    "Horario",
+    "Tus datos",
+    "Confirmación",
+  ];
 
-  if (!abierto) return null
+  if (!abierto) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center px-4"
       onClick={handleCerrar}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div 
+      <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="bg-[#4a3728] px-6 py-4 flex items-center justify-between">
           <div>
             <h2 id="modal-title" className="text-white font-semibold text-base">
-              {enviado ? '¡Consulta agendada!' : `Paso ${paso} de 4 — ${titulos[paso]}`}
+              {enviado
+                ? "¡Consulta agendada!"
+                : `Paso ${paso} de 4 — ${titulos[paso]}`}
             </h2>
-            <p className="text-white/60 text-xs mt-0.5">Dra. Carmen Montero · Médico Estético</p>
+            <p className="text-white/60 text-xs mt-0.5">
+              Dra. Carmen Montero · Médico Estético
+            </p>
           </div>
-          <button 
-            onClick={handleCerrar} 
+          <button
+            onClick={handleCerrar}
             className="text-white/70 hover:text-white text-2xl leading-none p-1 hover:bg-white/10 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
             aria-label="Cerrar modal"
           >
@@ -154,54 +234,70 @@ export default function FormularioCita({ abierto, onCerrar }) {
         {/* Barra de progreso */}
         {!enviado && (
           <div className="flex h-1.5 bg-gray-100">
-            {[1,2,3,4].map(n => (
-              <div 
-                key={n} 
+            {[1, 2, 3, 4].map((n) => (
+              <div
+                key={n}
                 className={`flex-1 transition-all duration-500 ${
-                  n < paso ? 'bg-[#c9a882]' : 
-                  n === paso ? 'bg-[#c9a882]' : 'bg-gray-200'
-                }`} 
+                  n < paso
+                    ? "bg-[#c9a882]"
+                    : n === paso
+                    ? "bg-[#c9a882]"
+                    : "bg-gray-200"
+                }`}
               />
             ))}
           </div>
         )}
 
         <div className="px-6 py-6 min-h-[400px]">
-          
           {/* Animación de transición entre pasos */}
-          <div className={`transition-all duration-300 ${
-            direccion === 'next' ? 'animate-slide-in-right' : 
-            direccion === 'prev' ? 'animate-slide-in-left' : ''
-          }`}>
-
+          <div
+            className={`transition-all duration-300 ${
+              direccion === "next"
+                ? "animate-slide-in-right"
+                : direccion === "prev"
+                ? "animate-slide-in-left"
+                : ""
+            }`}
+          >
             {/* Confirmación final */}
             {enviado && (
               <div className="text-center py-4">
                 <div className="text-5xl mb-4">✅</div>
                 <h3 className="text-lg font-semibold text-[#4a3728] mb-1">
-                  ¡Todo listo, {form.nombre.split(' ')[0]}!
+                  ¡Todo listo, {form.nombre.split(" ")[0]}!
                 </h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  Enviamos tu confirmación a <span className="text-[#c9a882] font-medium">{form.correo}</span>
+                  Enviamos tu confirmación a{" "}
+                  <span className="text-[#c9a882] font-medium">
+                    {form.correo}
+                  </span>
                 </p>
                 <div className="bg-[#f5ede0] rounded-xl p-4 text-left text-sm flex flex-col gap-3 mb-6 border border-[#e8d5c0]">
                   <div className="flex justify-between items-center">
                     <span className="text-[#7a6152]">Tratamiento</span>
-                    <span className="font-medium text-[#4a3728]">{form.tratamiento}</span>
+                    <span className="font-medium text-[#4a3728]">
+                      {form.tratamiento}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[#7a6152]">Fecha</span>
                     <span className="font-medium text-[#4a3728]">
-                      {form.dia && `${DIAS_SEMANA[form.dia.getDay()]} ${form.dia.getDate()} ${MESES[form.dia.getMonth()]}`}
+                      {form.dia &&
+                        `${
+                          DIAS_SEMANA[form.dia.getDay()]
+                        } ${form.dia.getDate()} ${MESES[form.dia.getMonth()]}`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[#7a6152]">Horario</span>
-                    <span className="font-medium text-[#4a3728]">{form.horario} hrs</span>
+                    <span className="font-medium text-[#4a3728]">
+                      {form.horario} hrs
+                    </span>
                   </div>
                 </div>
-                <button 
-                  onClick={handleCerrar} 
+                <button
+                  onClick={handleCerrar}
                   className="bg-[#4a3728] text-white px-8 py-2.5 rounded-full text-sm font-medium hover:bg-[#3a2a1e] transition-all duration-300 focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2 focus:outline-none"
                 >
                   Cerrar
@@ -212,21 +308,27 @@ export default function FormularioCita({ abierto, onCerrar }) {
             {/* Paso 1 — Tratamiento */}
             {!enviado && paso === 1 && (
               <div>
-                <p className="text-sm text-[#7a6152] mb-4">¿Qué tratamiento te interesa?</p>
+                <p className="text-sm text-[#7a6152] mb-4">
+                  ¿Qué tratamiento te interesa?
+                </p>
                 <div className="grid grid-cols-2 gap-3">
-                  {tratamientos.map(t => (
+                  {tratamientos.map((t) => (
                     <button
                       key={t.nombre}
-                      onClick={() => { 
-                        setForm({...form, tratamiento: t.nombre}); 
-                        avanzarPaso(2) 
+                      onClick={() => {
+                        setForm({ ...form, tratamiento: t.nombre });
+                        avanzarPaso(2);
                       }}
                       className={`flex items-center gap-2 border rounded-xl px-3 py-3 text-sm font-medium transition-all duration-300 text-left focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
-                        ${form.tratamiento === t.nombre
-                          ? 'border-[#c9a882] bg-[#f5ede0] text-[#4a3728] shadow-md'
-                          : 'border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm'}`}
+                        ${
+                          form.tratamiento === t.nombre
+                            ? "border-[#c9a882] bg-[#f5ede0] text-[#4a3728] shadow-md"
+                            : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
+                        }`}
                     >
-                      <span className="text-lg" aria-hidden="true">{t.icon}</span>
+                      <span className="text-lg" aria-hidden="true">
+                        {t.icon}
+                      </span>
                       <span className="leading-tight">{t.nombre}</span>
                     </button>
                   ))}
@@ -237,32 +339,53 @@ export default function FormularioCita({ abierto, onCerrar }) {
             {/* Paso 2 — Fecha */}
             {!enviado && paso === 2 && (
               <div>
-                <p className="text-sm text-[#7a6152] mb-4">Selecciona un día disponible</p>
+                <p className="text-sm text-[#7a6152] mb-4">
+                  Selecciona un día disponible
+                </p>
                 <div className="grid grid-cols-4 gap-2">
                   {dias.map((d, i) => (
                     <button
                       key={i}
-                      onClick={() => { 
-                        setForm({...form, dia: d}); 
-                        avanzarPaso(3) 
+                      onClick={() => {
+                        setForm({ ...form, dia: d });
+                        avanzarPaso(3);
                       }}
                       className={`flex flex-col items-center py-3 rounded-xl border text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
-                        ${form.dia && form.dia.toDateString() === d.toDateString()
-                          ? 'border-[#c9a882] bg-[#c9a882] text-white shadow-md scale-105'
-                          : 'border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm'}`}
+                        ${
+                          form.dia &&
+                          form.dia.toDateString() === d.toDateString()
+                            ? "border-[#c9a882] bg-[#c9a882] text-white shadow-md scale-105"
+                            : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
+                        }`}
                     >
-                      <span className="text-xs opacity-70">{DIAS_SEMANA[d.getDay()]}</span>
-                      <span className="font-semibold text-base">{d.getDate()}</span>
-                      <span className="text-xs opacity-70">{MESES[d.getMonth()].slice(0,3)}</span>
+                      <span className="text-xs opacity-70">
+                        {DIAS_SEMANA[d.getDay()]}
+                      </span>
+                      <span className="font-semibold text-base">
+                        {d.getDate()}
+                      </span>
+                      <span className="text-xs opacity-70">
+                        {MESES[d.getMonth()].slice(0, 3)}
+                      </span>
                     </button>
                   ))}
                 </div>
-                <button 
-                  onClick={() => avanzarPaso(1)} 
+                <button
+                  onClick={() => avanzarPaso(1)}
                   className="mt-4 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                   Volver
                 </button>
@@ -272,30 +395,44 @@ export default function FormularioCita({ abierto, onCerrar }) {
             {/* Paso 3 — Horario */}
             {!enviado && paso === 3 && (
               <div>
-                <p className="text-sm text-[#7a6152] mb-4">¿A qué hora te acomoda?</p>
+                <p className="text-sm text-[#7a6152] mb-4">
+                  ¿A qué hora te acomoda?
+                </p>
                 <div className="grid grid-cols-3 gap-2">
-                  {horarios.map(h => (
+                  {horarios.map((h) => (
                     <button
                       key={h}
-                      onClick={() => { 
-                        setForm({...form, horario: h}); 
-                        avanzarPaso(4) 
+                      onClick={() => {
+                        setForm({ ...form, horario: h });
+                        avanzarPaso(4);
                       }}
                       className={`py-3 rounded-xl border text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
-                        ${form.horario === h
-                          ? 'border-[#c9a882] bg-[#c9a882] text-white shadow-md scale-105'
-                          : 'border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm'}`}
+                        ${
+                          form.horario === h
+                            ? "border-[#c9a882] bg-[#c9a882] text-white shadow-md scale-105"
+                            : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
+                        }`}
                     >
                       {h} hrs
                     </button>
                   ))}
                 </div>
-                <button 
-                  onClick={() => avanzarPaso(2)} 
+                <button
+                  onClick={() => avanzarPaso(2)}
                   className="mt-4 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                   Volver
                 </button>
@@ -305,46 +442,63 @@ export default function FormularioCita({ abierto, onCerrar }) {
             {/* Paso 4 — Datos */}
             {!enviado && paso === 4 && (
               <div className="flex flex-col gap-4">
-                <p className="text-sm text-[#7a6152]">Ingresa tus datos de contacto</p>
-                
+                <p className="text-sm text-[#7a6152]">
+                  Ingresa tus datos de contacto
+                </p>
+
                 <div>
-                  <label htmlFor="nombre" className="text-xs font-medium text-[#7a6152] mb-1 block">
+                  <label
+                    htmlFor="nombre"
+                    className="text-xs font-medium text-[#7a6152] mb-1 block"
+                  >
                     Nombre completo
                   </label>
                   <input
                     id="nombre"
                     value={form.nombre}
-                    onChange={e => setForm({...form, nombre: e.target.value})}
+                    onChange={(e) =>
+                      setForm({ ...form, nombre: e.target.value })
+                    }
                     placeholder="Juan Pérez"
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#c9a882] focus:ring-2 focus:ring-[#c9a882]/20 transition-all duration-300"
                     autoComplete="name"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="telefono" className="text-xs font-medium text-[#7a6152] mb-1 block">
+                  <label
+                    htmlFor="telefono"
+                    className="text-xs font-medium text-[#7a6152] mb-1 block"
+                  >
                     Teléfono
                   </label>
                   <input
                     id="telefono"
                     type="tel"
                     value={form.telefono}
-                    onChange={e => setForm({...form, telefono: e.target.value})}
+                    onChange={(e) =>
+                      setForm({ ...form, telefono: e.target.value })
+                    }
                     placeholder="+56 9 6432 2438"
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#c9a882] focus:ring-2 focus:ring-[#c9a882]/20 transition-all duration-300"
                     autoComplete="tel"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="correo" className="text-xs font-medium text-[#7a6152] mb-1 block">
+                  <label
+                    htmlFor="correo"
+                    className="text-xs font-medium text-[#7a6152] mb-1 block"
+                  >
                     Correo electrónico
                   </label>
                   <input
                     id="correo"
                     type="email"
                     value={form.correo}
-                    onChange={e => setForm({...form, correo: e.target.value})}
+                    onChange={(e) =>
+                      setForm({ ...form, correo: e.target.value })
+                    }
                     placeholder="correo@gmail.com"
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#c9a882] focus:ring-2 focus:ring-[#c9a882]/20 transition-all duration-300"
                     autoComplete="email"
@@ -353,16 +507,26 @@ export default function FormularioCita({ abierto, onCerrar }) {
 
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                    <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <p className="text-red-600 text-xs">{error}</p>
                   </div>
                 )}
 
                 <div className="flex gap-3 mt-1">
-                  <button 
-                    onClick={() => avanzarPaso(3)} 
+                  <button
+                    onClick={() => avanzarPaso(3)}
                     className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm hover:bg-gray-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300"
                   >
                     Volver
@@ -374,14 +538,29 @@ export default function FormularioCita({ abierto, onCerrar }) {
                   >
                     {enviando ? (
                       <>
-                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <svg
+                          className="animate-spin w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                         Enviando...
                       </>
                     ) : (
-                      'Confirmar consulta'
+                      "Confirmar consulta"
                     )}
                   </button>
                 </div>
@@ -391,5 +570,5 @@ export default function FormularioCita({ abierto, onCerrar }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
