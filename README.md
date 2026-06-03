@@ -88,19 +88,6 @@ Abre [http://localhost:5173](http://localhost:5173) en el navegador.
 
 ---
 
-## 📧 Configuración de EmailJS
-
-El proyecto usa [EmailJS](https://www.emailjs.com) para enviar correos sin backend.
-
-Las credenciales están en `src/components/FormularioCita.jsx`:
-
-```js
-const SERVICE_ID = 'service_4og8nts'
-const TEMPLATE_CLIENTE = 'template_bmqcoc7'   // Correo al paciente
-const TEMPLATE_DOCTOR = 'template_lu9k4r7'    // Correo a la doctora
-const PUBLIC_KEY = 'Jguslyt-t5XNGcNi3'
-```
-
 ### Templates de EmailJS
 - **Template cliente** — Confirmación con datos de la cita y botón Google Calendar
 - **Template doctora** — Notificación con datos del paciente y botón Google Calendar
