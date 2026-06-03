@@ -1,16 +1,166 @@
-# React + Vite
+# 🏥 Dra. Carmen Montero — Sitio Web Médico Estético
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sitio web profesional para la **Dra. Carmen Montero**, Médico Estético ubicada en Viña del Mar, Chile. Incluye landing page, sistema de agendamiento de citas en línea, envío automático de correos y botón de WhatsApp.
 
-Currently, two official plugins are available:
+🌐 **Demo en vivo:** [clinica-carmen.vercel.app](https://clinica-carmen.vercel.app)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Funcionalidades
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Landing page** con identidad visual propia (colores nude/beige)
+- **Formulario de agendamiento** en 4 pasos:
+  1. Selección de tratamiento
+  2. Selección de fecha (próximos 14 días)
+  3. Selección de horario
+  4. Datos de contacto
+- **Correos automáticos** al cliente y a la doctora vía EmailJS
+- **Botón "Agregar a Google Calendar"** en ambos correos
+- **Botón de WhatsApp flotante** con tooltip
+- **Animaciones de entrada** con soporte para `prefers-reduced-motion`
+- **Responsive** para móvil, tablet y desktop
+- **Link a Instagram** de la doctora
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠️ Stack tecnológico
+
+| Tecnología | Uso |
+|---|---|
+| React | Librería principal de UI |
+| Vite | Servidor de desarrollo y bundler |
+| Tailwind CSS v4 | Estilos con clases utilitarias |
+| EmailJS | Envío de correos sin backend |
+| Git + GitHub | Control de versiones |
+| Vercel | Hosting y despliegue automático |
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+clinica-app/
+├── public/
+│   └── fotos/
+│       ├── foto1.jpeg       ← Hero principal
+│       └── foto2.jpeg       ← Foto perfil doctora
+├── src/
+│   ├── components/
+│   │   ├── Hero.jsx         ← Sección principal con foto
+│   │   ├── Services.jsx     ← Tratamientos y CTA
+│   │   ├── FormularioCita.jsx ← Modal de agendamiento
+│   │   ├── WhatsAppButton.jsx ← Botón flotante WhatsApp
+│   │   └── WhatsAppIcon.jsx ← Ícono SVG de WhatsApp
+│   ├── styles/
+│   │   └── animations.css   ← Animaciones personalizadas
+│   ├── App.jsx              ← Componente raíz
+│   ├── main.jsx             ← Punto de entrada
+│   └── index.css            ← Estilos globales (Tailwind)
+├── package.json
+└── vite.config.js
+```
+
+---
+
+## 🚀 Cómo correr el proyecto localmente
+
+### Requisitos previos
+- Node.js v18 o superior
+- npm
+
+### Instalación
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/TU_USUARIO/clinica-carmen.git
+
+# Entrar a la carpeta
+cd clinica-carmen/clinica-app
+
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo
+npm run dev
+```
+
+Abre [http://localhost:5173](http://localhost:5173) en el navegador.
+
+---
+
+## 📧 Configuración de EmailJS
+
+El proyecto usa [EmailJS](https://www.emailjs.com) para enviar correos sin backend.
+
+Las credenciales están en `src/components/FormularioCita.jsx`:
+
+```js
+const SERVICE_ID = 'service_4og8nts'
+const TEMPLATE_CLIENTE = 'template_bmqcoc7'   // Correo al paciente
+const TEMPLATE_DOCTOR = 'template_lu9k4r7'    // Correo a la doctora
+const PUBLIC_KEY = 'Jguslyt-t5XNGcNi3'
+```
+
+### Templates de EmailJS
+- **Template cliente** — Confirmación con datos de la cita y botón Google Calendar
+- **Template doctora** — Notificación con datos del paciente y botón Google Calendar
+
+---
+
+## 📅 Tratamientos disponibles
+
+- ✨ Limpiezas Faciales
+- 💉 Botox
+- 🌿 Bioestimuladores
+- 💧 Sueroterapia
+- ⭐ Mesoterapia con Vitaminas
+- 👃 Rinomodelación
+- 💋 Lips Glow
+
+---
+
+## 📞 Información de contacto
+
+| Campo | Dato |
+|---|---|
+| Doctora | Dra. Carmen Montero |
+| Especialidad | Médico Estético |
+| Ubicación | Av. Libertad 269, Piso 6, Of. 602 · Viña del Mar |
+| WhatsApp | +56 9 6432 2438 |
+| Correo | Dracarmenmontero01@gmail.com |
+| Instagram | [@dracarmen_montero](https://www.instagram.com/dracarmen_montero) |
+
+---
+
+## 📦 Scripts disponibles
+
+```bash
+npm run dev      # Inicia servidor de desarrollo
+npm run build    # Genera build de producción
+npm run preview  # Previsualiza el build
+```
+
+---
+
+## 🔄 Despliegue
+
+El proyecto se despliega automáticamente en **Vercel** cada vez que se hace push a la rama `main`:
+
+```bash
+git add .
+git commit -m "descripción del cambio"
+git push
+```
+
+Vercel detecta los cambios y despliega en 1-2 minutos.
+
+---
+
+## 👨‍💻 Desarrollado por
+
+**Luis Montero** — Backend Developer  
+Valparaiso, Chile
+
+---
+
+*© 2026 Dra. Carmen Montero · Médico Estético · Viña del Mar*
