@@ -90,8 +90,8 @@ export default function FormularioCita({ abierto, onCerrar }) {
   const handleSubmit = async () => {
     // Rate limiting — 1 envío por minuto
     const ahora = Date.now();
-    if (ultimoEnvio && ahora - ultimoEnvio < 60000) {
-      const segundosRestantes = Math.ceil((60000 - (ahora - ultimoEnvio)) / 1000);
+    if (ultimoEnvio && ahora - ultimoEnvio < 1200000) {
+      const segundosRestantes = Math.ceil((120000 - (ahora - ultimoEnvio)) / 1000);
       setError(`Por favor espera ${segundosRestantes} segundos antes de intentar nuevamente.`);
       return;
     }
