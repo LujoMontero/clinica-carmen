@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import emailjs from "@emailjs/browser";
 
-const SERVICE_ID = "service_4og8nts";
-const TEMPLATE_CLIENTE = "template_bmqcoc7";
-const TEMPLATE_DOCTOR = "template_lu9k4r7";
-const PUBLIC_KEY = "Jguslyt-t5XNGcNi3";
+const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID
+const TEMPLATE_CLIENTE = import.meta.env.VITE_EMAILJS_TEMPLATE_CLIENTE
+const TEMPLATE_DOCTOR = import.meta.env.VITE_EMAILJS_TEMPLATE_DOCTOR
+const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 
 const tratamientos = [
   { icon: "✨", nombre: "Limpiezas Faciales" },
