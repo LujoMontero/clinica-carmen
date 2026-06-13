@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import emailjs from "@emailjs/browser";
+import { agendarCitaFirestore, verificarHorarioDisponible } from "../firebase";
 
 const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const TEMPLATE_CLIENTE = import.meta.env.VITE_EMAILJS_TEMPLATE_CLIENTE;
 const TEMPLATE_DOCTOR = import.meta.env.VITE_EMAILJS_TEMPLATE_DOCTOR;
 const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+const RATE_LIMIT_MS = 120000; // 2 minutos exactos
 
 const tratamientos = [
   { icon: "✨", nombre: "Limpiezas Faciales" },
@@ -16,7 +19,7 @@ const tratamientos = [
   { icon: "💋", nombre: "Lips Glow" },
 ];
 
-const horarios = ["08:00","09:00","10:00","11:00","12:00","14:00","15:00","16:00","17:00","18:00"];
+const horariosFijos = ["08:00","09:00","10:00","11:00","12:00","14:00","15:00","16:00","17:00","18:00"];
 
 function getDias() {
   const dias = [];
@@ -41,6 +44,7 @@ export default function FormularioCita({ abierto, onCerrar }) {
   const [ultimoEnvio, setUltimoEnvio] = useState(null);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState("");
+  const [horariosDisponibles, setHorariosDisponibles] = useState(horariosFijos);
 
   const dias = getDias();
 
@@ -53,12 +57,29 @@ export default function FormularioCita({ abierto, onCerrar }) {
     return () => { document.body.style.overflow = ""; };
   }, [abierto]);
 
+  // Verificar horarios disponibles cuando cambia el día
+  useEffect(() => {
+    if (form.dia) {
+      verificarHorariosDelDia(form.dia);
+    }
+  }, [form.dia]);
+
+  async function verificarHorariosDelDia(fecha) {
+    const disponibles = [];
+    for (const h of horariosFijos) {
+      const disponible = await verificarHorarioDisponible(fecha, h);
+      if (disponible) disponibles.push(h);
+    }
+    setHorariosDisponibles(disponibles);
+  }
+
   const handleCerrar = useCallback(() => {
     setPaso(1);
     setForm({ tratamiento: "", dia: null, horario: "", nombre: "", telefono: "", correo: "" });
     setEnviado(false);
     setError("");
     setDireccion(null);
+    setHorariosDisponibles(horariosFijos);
     onCerrar();
   }, [onCerrar]);
 
@@ -88,67 +109,70 @@ export default function FormularioCita({ abierto, onCerrar }) {
   };
 
   const handleSubmit = async () => {
-    // Rate limiting — 1 envío por minuto
+    // === RATE LIMITING (2 minutos) ===
     const ahora = Date.now();
-    if (ultimoEnvio && ahora - ultimoEnvio < 1200000) {
-      const segundosRestantes = Math.ceil((120000 - (ahora - ultimoEnvio)) / 1000);
+    if (ultimoEnvio && ahora - ultimoEnvio < RATE_LIMIT_MS) {
+      const segundosRestantes = Math.ceil((RATE_LIMIT_MS - (ahora - ultimoEnvio)) / 1000);
       setError(`Por favor espera ${segundosRestantes} segundos antes de intentar nuevamente.`);
       return;
     }
 
-    // Validaciones
+    // === VALIDACIONES ===
     if (!validarFormulario()) return;
 
     setError("");
     setEnviando(true);
 
-    const diaStr = form.dia
-      ? `${DIAS_SEMANA[form.dia.getDay()]} ${form.dia.getDate()} de ${MESES[form.dia.getMonth()]}`
-      : "";
-
-    const generarLinkCalendario = () => {
-      if (!form.dia || !form.horario) return "";
-      const [horas, minutos] = form.horario.split(":").map(Number);
-      const inicio = new Date(form.dia);
-      inicio.setHours(horas, minutos || 0, 0, 0);
-      const fin = new Date(inicio);
-      fin.setHours(fin.getHours() + 1);
-      const formatFecha = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-      const params = new URLSearchParams({
-        action: "TEMPLATE",
-        text: `Consulta - Dra. Carmen Montero (${form.tratamiento})`,
-        dates: `${formatFecha(inicio)}/${formatFecha(fin)}`,
-        details: `Tratamiento: ${form.tratamiento}\nDra. Carmen Montero - Médico Estético\nTeléfono: +56 9 6432 2438`,
-        location: "Av. Libertad 269, Piso 6, Oficina 602, Viña del Mar",
-        sf: "true",
-        output: "xml",
-      });
-      return `https://calendar.google.com/calendar/render?${params.toString()}`;
-    };
-
-    const linkCalendario = generarLinkCalendario();
-
-    const params = {
-      nombre: form.nombre.trim(),
-      telefono: form.telefono.trim(),
-      correo_cliente: form.correo.trim(),
-      especialidad: form.tratamiento,
-      dia: diaStr,
-      horario: form.horario,
-      link_calendario: linkCalendario,
-    };
-
     try {
+      // ============================================
+      // PASO 1: GUARDAR EN FIRESTORE (bloqueo atómico)
+      // ============================================
+      const resultado = await agendarCitaFirestore({
+        tratamiento: form.tratamiento,
+        fecha: form.dia,
+        horario: form.horario,
+        nombre: form.nombre,
+        telefono: form.telefono,
+        correo: form.correo
+      });
+
+      // ¿El horario ya estaba ocupado?
+      if (!resultado.success) {
+        setError(resultado.error);
+        setEnviando(false);
+        return;
+      }
+
+      // ============================================
+      // PASO 2: ENVIAR EMAILS (notificación paralela)
+      // ============================================
+      const diaStr = form.dia
+        ? `${DIAS_SEMANA[form.dia.getDay()]} ${form.dia.getDate()} de ${MESES[form.dia.getMonth()]}`
+        : "";
+
+      const params = {
+        nombre: form.nombre.trim(),
+        telefono: form.telefono.trim(),
+        correo_cliente: form.correo.trim(),
+        especialidad: form.tratamiento,
+        dia: diaStr,
+        horario: form.horario,
+        cita_id: resultado.citaId,  // ← Nuevo: ID de Firestore
+      };
+
       await Promise.all([
         emailjs.send(SERVICE_ID, TEMPLATE_CLIENTE, params, PUBLIC_KEY),
         emailjs.send(SERVICE_ID, TEMPLATE_DOCTOR, params, PUBLIC_KEY),
       ]);
+
+      // === ÉXITO ===
       setUltimoEnvio(Date.now());
       setEnviado(true);
       setPaso(5);
+
     } catch (err) {
-      console.error("Error enviando email:", err);
-      setError("Hubo un problema al enviar. Llámanos al +56 9 6432 2438.");
+      console.error("Error:", err);
+      setError("Hubo un problema al guardar tu cita. Llámanos al +56 9 6432 2438.");
     } finally {
       setEnviando(false);
     }
@@ -292,24 +316,45 @@ export default function FormularioCita({ abierto, onCerrar }) {
               </div>
             )}
 
-            {/* Paso 3 — Horario */}
+            {/* Paso 3 — Horario (con verificación de disponibilidad) */}
             {!enviado && paso === 3 && (
               <div>
                 <p className="text-sm text-[#7a6152] mb-4">¿A qué hora te acomoda?</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {horarios.map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => { setForm({ ...form, horario: h }); avanzarPaso(4); }}
-                      className={`py-3 rounded-xl border text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
-                        ${form.horario === h
-                          ? "border-[#c9a882] bg-[#c9a882] text-white shadow-md scale-105"
-                          : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"}`}
+
+                {horariosDisponibles.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 text-sm">No hay horarios disponibles para este día.</p>
+                    <button 
+                      onClick={() => avanzarPaso(2)} 
+                      className="mt-4 text-[#c9a882] text-sm font-medium hover:underline"
                     >
-                      {h} hrs
+                      Seleccionar otro día
                     </button>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {horariosFijos.map((h) => {
+                      const disponible = horariosDisponibles.includes(h);
+                      return (
+                        <button
+                          key={h}
+                          onClick={() => disponible && setForm({ ...form, horario: h }) && avanzarPaso(4)}
+                          disabled={!disponible}
+                          className={`py-3 rounded-xl border text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
+                            ${!disponible 
+                              ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed"
+                              : form.horario === h
+                                ? "border-[#c9a882] bg-[#c9a882] text-white shadow-md scale-105"
+                                : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"}`}
+                        >
+                          {h} hrs
+                          {!disponible && <span className="block text-xs mt-0.5">Ocupado</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <button onClick={() => avanzarPaso(2)} className="mt-4 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
