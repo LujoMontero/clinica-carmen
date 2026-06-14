@@ -7,6 +7,7 @@ export default function Hero({ onAgendar }) {
     img.src = '/fotos/foto1.jpeg'
   }, [])
 
+  
   return (
     <section 
       className="bg-[#f5ede0] flex flex-col md:flex-row min-h-screen" 
