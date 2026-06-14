@@ -147,7 +147,6 @@ Vercel detecta los cambios y despliega en 1-2 minutos.
 
 **Luis Montero** — Backend Developer  
 Valparaiso, Chile
-
 ---
 
 *© 2026 Dra. Carmen Montero · Médico Estético · Viña del Mar*
