@@ -1,4 +1,19 @@
-// ============================================
+import { initializeApp } from 'firebase/app';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  setDoc, 
+  runTransaction, 
+  serverTimestamp,
+  getDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  updateDoc
+} from 'firebase/firestore';
+
+// 1. CONFIGURACIÓN - Lee las variables del .env// ============================================
 // FUNCIÓN PRINCIPAL: Agendar cita
 // ============================================
 export async function agendarCitaFirestore(datosCita) {
