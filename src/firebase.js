@@ -1,3 +1,7 @@
+// ============================================
+// CONFIGURACIÓN FIREBASE - Clínica Carmen
+// ============================================
+
 import { initializeApp } from 'firebase/app';
 import { 
   getFirestore, 
@@ -13,7 +17,23 @@ import {
   updateDoc
 } from 'firebase/firestore';
 
-// 1. CONFIGURACIÓN - Lee las variables del .env// ============================================
+// 1. CONFIGURACIÓN - Lee las variables del .env
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+// 2. INICIALIZAR APP
+const app = initializeApp(firebaseConfig);
+
+// 3. OBTENER BASE DE DATOS
+export const db = getFirestore(app);
+
+// ============================================
 // FUNCIÓN PRINCIPAL: Agendar cita
 // ============================================
 export async function agendarCitaFirestore(datosCita) {
@@ -93,6 +113,12 @@ export async function verificarHorarioDisponible(fecha, horario) {
 // ============================================
 // FUNCIONES PARA PANEL DE ADMINISTRACIÓN
 // ============================================
+
+/**
+ * Obtener todas las citas en tiempo real
+ * @param {Function} callback - Función que recibe el array de citas
+ * @returns {Function} unsubscribe - Función para detener la escucha
+ */
 export function obtenerCitas(callback) {
   const q = query(collection(db, 'citas'), orderBy('creadoEn', 'desc'));
   
@@ -109,7 +135,14 @@ export function obtenerCitas(callback) {
   });
 }
 
-// ✅ SOLO ESTA FUNCIÓN (elimina la otra duplicada)
+/**
+ * Actualizar el estado de una cita
+ * Si se cancela, libera el horario automáticamente
+ * @param {string} citaId - ID de la cita
+ * @param {string} nuevoEstado - Estado nuevo
+ * @param {string} fecha - Fecha en formato YYYY-MM-DD
+ * @param {string} horario - Hora en formato HH:MM
+ */
 export async function actualizarEstadoCita(citaId, nuevoEstado, fecha, horario) {
   const citaRef = doc(db, 'citas', citaId);
   
