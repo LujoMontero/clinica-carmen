@@ -136,3 +136,34 @@ export async function actualizarEstadoCita(citaId, nuevoEstado) {
     actualizadoEn: serverTimestamp()
   });
 }
+
+/**
+ * Actualizar el estado de una cita
+ * Si se cancela, libera el horario automáticamente
+ * @param {string} citaId - ID de la cita
+ * @param {string} nuevoEstado - Estado nuevo
+ * @param {string} fecha - Fecha en formato YYYY-MM-DD
+ * @param {string} horario - Hora en formato HH:MM
+ */
+export async function actualizarEstadoCita(citaId, nuevoEstado, fecha, horario) {
+  const citaRef = doc(db, 'citas', citaId);
+  
+  // Actualizar estado de la cita
+  await updateDoc(citaRef, {
+    estado: nuevoEstado,
+    actualizadoEn: serverTimestamp()
+  });
+
+  // Si se cancela, liberar el horario
+  if (nuevoEstado === 'cancelada') {
+    const horarioId = `${fecha}_${horario}`;
+    const horarioRef = doc(db, 'horarios', horarioId);
+    
+    await updateDoc(horarioRef, {
+      disponible: true,
+      citaId: null
+    });
+    
+    console.log(`Horario ${horarioId} liberado`);
+  }
+}
