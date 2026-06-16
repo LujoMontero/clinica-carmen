@@ -13,6 +13,12 @@ const TRATAMIENTOS = [
   "Lips Glow",
 ];
 
+// ✅ FECHA LOCAL: Usa hora local en vez de UTC
+function getFechaLocal() {
+  const ahora = new Date();
+  return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+}
+
 export default function AdminPanel() {
   const [citas, setCitas] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -21,7 +27,7 @@ export default function AdminPanel() {
   const [filtroEstado, setFiltroEstado] = useState("");
   const navigate = useNavigate();
 
-  const hoy = new Date().toISOString().split("T")[0];
+  const hoy = getFechaLocal();
 
   useEffect(() => {
     const unsubscribe = obtenerCitas((data) => {
@@ -79,7 +85,8 @@ export default function AdminPanel() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `citas-${new Date().toISOString().split("T")[0]}.csv`;
+    // ✅ FECHA LOCAL para nombre del archivo
+    a.download = `citas-${getFechaLocal()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

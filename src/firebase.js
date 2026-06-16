@@ -1,45 +1,10 @@
 // ============================================
-// CONFIGURACIÓN FIREBASE - Clínica Carmen
-// ============================================
-
-import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  setDoc, 
-  runTransaction, 
-  serverTimestamp,
-  getDoc,
-  query,
-  orderBy,
-  onSnapshot,
-  updateDoc
-} from 'firebase/firestore';
-
-// 1. CONFIGURACIÓN - Lee las variables del .env
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
-// 2. INICIALIZAR APP
-const app = initializeApp(firebaseConfig);
-
-// 3. OBTENER BASE DE DATOS
-export const db = getFirestore(app);
-
-// ============================================
 // FUNCIÓN PRINCIPAL: Agendar cita
 // ============================================
 export async function agendarCitaFirestore(datosCita) {
   const { fecha, horario, nombre, telefono, correo, tratamiento } = datosCita;
   
-  const fechaStr = fecha.toISOString().split('T')[0];
+  const fechaStr = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
   const horarioId = `${fechaStr}_${horario}`;
   
   const citaRef = doc(collection(db, 'citas'));
@@ -99,7 +64,7 @@ export async function agendarCitaFirestore(datosCita) {
 // FUNCIÓN AUXILIAR: Verificar disponibilidad
 // ============================================
 export async function verificarHorarioDisponible(fecha, horario) {
-  const fechaStr = fecha.toISOString().split('T')[0];
+  const fechaStr = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
   const horarioId = `${fechaStr}_${horario}`;
   
   const horarioRef = doc(db, 'horarios', horarioId);
@@ -129,26 +94,10 @@ export function obtenerCitas(callback) {
   });
 }
 
-export async function actualizarEstadoCita(citaId, nuevoEstado) {
-  const citaRef = doc(db, 'citas', citaId);
-  await updateDoc(citaRef, {
-    estado: nuevoEstado,
-    actualizadoEn: serverTimestamp()
-  });
-}
-
-/**
- * Actualizar el estado de una cita
- * Si se cancela, libera el horario automáticamente
- * @param {string} citaId - ID de la cita
- * @param {string} nuevoEstado - Estado nuevo
- * @param {string} fecha - Fecha en formato YYYY-MM-DD
- * @param {string} horario - Hora en formato HH:MM
- */
+// ✅ SOLO ESTA FUNCIÓN (elimina la otra duplicada)
 export async function actualizarEstadoCita(citaId, nuevoEstado, fecha, horario) {
   const citaRef = doc(db, 'citas', citaId);
   
-  // Actualizar estado de la cita
   await updateDoc(citaRef, {
     estado: nuevoEstado,
     actualizadoEn: serverTimestamp()
