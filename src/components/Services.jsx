@@ -10,6 +10,12 @@ const tratamientos = [
   { icon: '💋', nombre: 'Lips Glow', desc: 'Tratamiento para volumen y definición de labios con resultados naturales y duraderos.' },
 ]
 
+const valores = [
+  { icono: '💎', titulo: 'Excelencia', desc: 'Compromiso con los más altos estándares de calidad en cada procedimiento.' },
+  { icono: '🤝', titulo: 'Confianza', desc: 'Relación basada en honestidad, transparencia y resultados verificables.' },
+  { icono: '💡', titulo: 'Innovación', desc: 'Técnicas modernas y productos de última generación para mejores resultados.' },
+]
+
 // Hook personalizado para animación de entrada
 function useIntersectionObserver() {
   const ref = useRef(null)
@@ -43,6 +49,7 @@ function CheckIcon() {
 
 export default function Services({ onAgendar }) {
   const { ref: sectionRef, isVisible } = useIntersectionObserver()
+  const { ref: valoresRef, isVisible: valoresVisible } = useIntersectionObserver()
 
   return (
     <>
@@ -90,9 +97,9 @@ export default function Services({ onAgendar }) {
         </div>
       </section>
 
-      {/* Sobre la Dra */}
+      {/* Sobre la Dra - Foto + Descripción */}
       <section className="py-20 px-6 bg-[#f5ede0]" aria-label="Sobre la Dra. Carmen Montero">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12 mb-16">
           <div className="w-64 h-64 rounded-full overflow-hidden flex-shrink-0 border-4 border-[#c9a882]/40 shadow-xl hover:shadow-2xl transition-shadow duration-500">
             <img 
               src="/fotos/foto2.jpeg" 
@@ -128,6 +135,41 @@ export default function Services({ onAgendar }) {
                 <span>Comprometida con tu bienestar</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Cita destacada */}
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 mb-20 bg-white rounded-2xl p-8 md:p-10 shadow-sm">
+          <blockquote className="flex-1">
+            <p className="text-[#4a3728] text-lg md:text-xl font-light leading-relaxed italic">
+              "Mi compromiso es que salgas de la consulta sintiéndote escuchada, informada
+              y con un plan que tenga sentido para ti — no para cualquiera."
+            </p>
+            <footer className="mt-4 text-sm text-[#c9a882] font-medium not-italic">
+              — Dra. Carmen Montero, Médico Estético
+            </footer>
+          </blockquote>
+        </div>
+
+        {/* Tarjetas de valores */}
+        <div className="max-w-5xl mx-auto" ref={valoresRef}>
+          <p className="text-xs tracking-widest uppercase text-[#c9a882] text-center mb-8 font-medium">
+            Mi enfoque
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {valores.map((v, i) => (
+              <div
+                key={v.titulo}
+                className={`border border-[#e8d5c0] rounded-2xl p-6 hover:border-[#c9a882] hover:shadow-md transition-all duration-500 ${
+                  valoresVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                }`}
+                style={{ transitionDelay: `${i * 120}ms` }}
+              >
+                <div className="text-2xl mb-3" aria-hidden="true">{v.icono}</div>
+                <h3 className="font-medium text-[#4a3728] mb-2 text-sm">{v.titulo}</h3>
+                <p className="text-xs text-[#7a6152] leading-relaxed">{v.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

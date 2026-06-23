@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { obtenerCitas, actualizarEstadoCita } from "../firebase";
+import { obtenerCitas, actualizarEstadoCita, cerrarSesionAdmin } from "../firebase";
 
 const ESTADOS = ["confirmada", "completada", "cancelada"];
 const TRATAMIENTOS = [
@@ -37,9 +37,11 @@ export default function AdminPanel() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("adminAuth");
-    navigate("/admin/login");
+  const handleLogout = async () => {
+    await cerrarSesionAdmin();
+    sessionStorage.removeItem('adminAuth');
+    sessionStorage.removeItem('adminTime');
+    navigate('/admin/login');
   };
 
   const handleCambiarEstado = async (citaId, estadoActual, fecha, horario) => {
@@ -85,7 +87,6 @@ export default function AdminPanel() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    // ✅ FECHA LOCAL para nombre del archivo
     a.download = `citas-${getFechaLocal()}.csv`;
     a.click();
     URL.revokeObjectURL(url);

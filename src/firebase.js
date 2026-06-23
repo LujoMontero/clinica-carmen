@@ -3,6 +3,7 @@
 // ============================================
 
 import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signOut } from 'firebase/auth';
 import { 
   getFirestore, 
   collection, 
@@ -27,11 +28,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// 2. INICIALIZAR APP
+// 2. INICIALIZAR APP (antes de usar auth o db)
 const app = initializeApp(firebaseConfig);
 
-// 3. OBTENER BASE DE DATOS
+// 3. OBTENER SERVICIOS
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 // ============================================
 // FUNCIÓN PRINCIPAL: Agendar cita
@@ -162,5 +164,43 @@ export async function actualizarEstadoCita(citaId, nuevoEstado, fecha, horario) 
     });
     
     console.log(`Horario ${horarioId} liberado`);
+  }
+}
+
+// ============================================
+// AUTENTICACIÓN PARA PANEL ADMIN
+// ============================================
+
+/**
+ * Login anónimo para acceder a Firestore protegido
+ */
+export async function loginAdminAnonimo() {
+  try {
+    const result = await signInAnonymously(auth);
+    return { success: true, uid: result.user.uid };
+  } catch (error) {
+    console.error('Error login anónimo:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Verificar si hay sesión activa
+ */
+export function verificarSesionAdmin(callback) {
+  return auth.onAuthStateChanged((user) => {
+    callback(!!user);
+  });
+}
+
+/**
+ * Cerrar sesión
+ */
+export async function cerrarSesionAdmin() {
+  try {
+    await signOut(auth);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }

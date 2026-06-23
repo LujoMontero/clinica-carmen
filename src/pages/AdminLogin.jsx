@@ -1,27 +1,46 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loginAdminAnonimo } from '../firebase';
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!password.trim()) {
       setError('Ingrese la contraseña');
       return;
     }
-    
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('adminAuth', 'true');
-      setError('');
-      navigate('/admin');
-    } else {
+
+    setCargando(true);
+    setError('');
+
+    // 1. Validar contraseña
+    if (password !== ADMIN_PASSWORD) {
       setError('Contraseña incorrecta');
-      setPassword('');
+      setCargando(false);
+      return;
     }
+
+    // 2. Autenticar anónimamente en Firebase
+    const resultado = await loginAdminAnonimo();
+    
+    if (!resultado.success) {
+      setError('Error de autenticación. Intente nuevamente.');
+      setCargando(false);
+      return;
+    }
+
+    // 3. Guardar sesión
+    sessionStorage.setItem('adminAuth', 'true');
+    sessionStorage.setItem('adminTime', Date.now().toString());
+    
+    setCargando(false);
+    navigate('/admin');
   };
 
   const handleKeyDown = (e) => {
@@ -56,9 +75,10 @@ export default function AdminLogin() {
           
           <button
             onClick={handleLogin}
-            className="w-full bg-[#4a3728] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#3a2a1e] transition-all"
+            disabled={cargando}
+            className="w-full bg-[#4a3728] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#3a2a1e] transition-all disabled:opacity-50"
           >
-            Entrar
+            {cargando ? 'Verificando...' : 'Entrar'}
           </button>
         </div>
       </div>
