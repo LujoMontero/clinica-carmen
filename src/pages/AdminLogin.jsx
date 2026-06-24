@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginAdminAnonimo } from "../firebase";
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
