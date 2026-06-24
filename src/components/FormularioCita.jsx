@@ -10,13 +10,122 @@ const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 const RATE_LIMIT_MS = 120000; // 2 minutos exactos
 
 const tratamientos = [
-  { icon: "✨", nombre: "Limpiezas Faciales" },
-  { icon: "💉", nombre: "Botox" },
-  { icon: "🌿", nombre: "Bioestimuladores" },
-  { icon: "💧", nombre: "Sueroterapia" },
-  { icon: "⭐", nombre: "Mesoterapia con Vitaminas" },
-  { icon: "👃", nombre: "Rinomodelación" },
-  { icon: "💋", nombre: "Lips Glow" },
+  {
+    icon: "✨",
+    nombre: "Limpiezas Faciales",
+    tieneSubopciones: false,
+  },
+  {
+    icon: "💉",
+    nombre: "Botox",
+    tieneSubopciones: true,
+    subopciones: [
+      {
+        nombre: "Toxina Botulínica (Reage, Nabota) 3 zonas",
+        precio: "$179.990",
+      },
+      { nombre: "Toxina Botulínica para el bruxismo", precio: "$250.000" },
+      {
+        nombre: "Toxina Botulínica + Ácido Hialurónico (1ml)",
+        precio: "$400.000",
+      },
+      {
+        nombre: "Toxina Botulínica + Mesoterapia en rostro",
+        precio: "$199.990",
+      },
+    ],
+  },
+  {
+    icon: "💧",
+    nombre: "Ácido Hialurónico",
+    tieneSubopciones: true,
+    subopciones: [
+      { nombre: "Relleno de labios con ácido hialurónico", precio: "$250.000" },
+      { nombre: "Relleno de mentón con ácido hialurónico", precio: "$250.000" },
+      {
+        nombre: "Relleno de pómulos con ácido hialurónico",
+        precio: "$250.000",
+      },
+      { nombre: "Rinomodelación con ácido hialurónico", precio: "$350.000" },
+      { nombre: "Rinolips (rinomodelación + labios)", precio: "$500.000" },
+      { nombre: "Ácido hialurónico + Mesoterapia", precio: "$289.990" },
+    ],
+  },
+  {
+    icon: "🌿",
+    nombre: "Bioestimuladores",
+    tieneSubopciones: true,
+    subopciones: [
+      { nombre: "Novuma (hidroxiapatita de calcio)", precio: "$440.000" },
+      { nombre: "Radiesse (hidroxiapatita de calcio)", precio: "$490.000" },
+      { nombre: "Sculpa (ácido poliláctico)", precio: "$560.000" },
+      {
+        nombre: "ADN de Salmón en ojeras (polinucleótidos)",
+        precio: "$320.000",
+      },
+      {
+        nombre: "ADN de Salmón en ojeras + Toxina Botulínica",
+        precio: "$450.000",
+      },
+      { nombre: "Mesoterapia en rostro (3 sesiones)", precio: "$199.990" },
+    ],
+  },
+  {
+    icon: "⭐",
+    nombre: "Láser CO²",
+    tieneSubopciones: true,
+    subopciones: [
+      { nombre: "Láser CO² - Una sesión", precio: "$200.000" },
+      { nombre: "Láser CO² - Pack de 3 sesiones", precio: "$450.000" },
+      {
+        nombre: "Láser CO² - Pack de 3 sesiones + vitaminas",
+        precio: "$499.990",
+      },
+    ],
+  },
+  {
+    icon: "💡",
+    nombre: "IPL",
+    tieneSubopciones: true,
+    subopciones: [
+      { nombre: "IPL - Pack de 5 sesiones", precio: "$300.000" },
+      {
+        nombre: "IPL - Rejuvenecimiento facial (IPL + Toxina Botulínica)",
+        precio: "$199.990",
+      },
+    ],
+  },
+  {
+    icon: "💊",
+    nombre: "Vitaminas Endovenosas",
+    tieneSubopciones: true,
+    subopciones: [
+      {
+        nombre: "Skin Glow (Vit C + Oligoelementos + Glutatión)",
+        precio: "$99.000",
+      },
+      { nombre: "Megadosis de Vitamina C", precio: "$80.000" },
+    ],
+  },
+  {
+    icon: "👃",
+    nombre: "Rinomodelación",
+    tieneSubopciones: false,
+  },
+  {
+    icon: "💋",
+    nombre: "Lips Glow",
+    tieneSubopciones: false,
+  },
+  {
+    icon: "🩺",
+    nombre: "Consulta / Evaluación",
+    tieneSubopciones: true,
+    subopciones: [
+      { nombre: "Control", precio: "Sin costo" },
+      { nombre: "Evaluación médica", precio: "$20.000" },
+    ],
+  },
 ];
 
 const horariosFijos = [
@@ -76,6 +185,8 @@ export default function FormularioCita({ abierto, onCerrar }) {
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState("");
   const [horariosDisponibles, setHorariosDisponibles] = useState(horariosFijos);
+  const [subopcionSeleccionada, setSubopcionSeleccionada] = useState(null);
+  const [tratamientoPadre, setTratamientoPadre] = useState(null);
 
   const dias = getDias();
 
@@ -120,6 +231,8 @@ export default function FormularioCita({ abierto, onCerrar }) {
     setError("");
     setDireccion(null);
     setHorariosDisponibles(horariosFijos);
+    setSubopcionSeleccionada(null); // ← NUEVO
+    setTratamientoPadre(null); // ← NUEVO
     onCerrar();
   }, [onCerrar]);
 
@@ -231,6 +344,7 @@ export default function FormularioCita({ abierto, onCerrar }) {
   const titulos = [
     "",
     "Tratamiento",
+    "Sub-opción", // ← Nuevo
     "Fecha",
     "Horario",
     "Tus datos",
@@ -257,6 +371,12 @@ export default function FormularioCita({ abierto, onCerrar }) {
             <h2 id="modal-title" className="text-white font-semibold text-base">
               {enviado
                 ? "¡Consulta agendada!"
+                : paso === 1.5
+                ? `Paso 2 de 4 — ${titulos[2]}`
+                : paso > 1.5
+                ? `Paso ${Math.floor(paso)} de 4 — ${
+                    titulos[Math.floor(paso) + 1]
+                  }`
                 : `Paso ${paso} de 4 — ${titulos[paso]}`}
             </h2>
             <p className="text-white/60 text-xs mt-0.5">
@@ -279,7 +399,13 @@ export default function FormularioCita({ abierto, onCerrar }) {
               <div
                 key={n}
                 className={`flex-1 transition-all duration-500 ${
-                  n <= paso ? "bg-[#c9a882]" : "bg-gray-200"
+                  (paso >= 1.5 && n === 1) ||
+                  n < paso ||
+                  (paso === 1.5 && n === 1)
+                    ? "bg-[#c9a882]"
+                    : n <= paso
+                    ? "bg-[#c9a882]"
+                    : "bg-gray-200"
                 }`}
               />
             ))}
@@ -352,15 +478,21 @@ export default function FormularioCita({ abierto, onCerrar }) {
                     <button
                       key={t.nombre}
                       onClick={() => {
-                        setForm({ ...form, tratamiento: t.nombre });
-                        avanzarPaso(2);
+                        if (t.tieneSubopciones) {
+                          setTratamientoPadre(t);
+                          setPaso(1.5); // Ir a sub-opciones
+                        } else {
+                          setForm({ ...form, tratamiento: t.nombre });
+                          avanzarPaso(2);
+                        }
                       }}
                       className={`flex items-center gap-2 border rounded-xl px-3 py-3 text-sm font-medium transition-all duration-300 text-left focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
-                        ${
-                          form.tratamiento === t.nombre
-                            ? "border-[#c9a882] bg-[#f5ede0] text-[#4a3728] shadow-md"
-                            : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
-                        }`}
+            ${
+              form.tratamiento === t.nombre ||
+              tratamientoPadre?.nombre === t.nombre
+                ? "border-[#c9a882] bg-[#f5ede0] text-[#4a3728] shadow-md"
+                : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
+            }`}
                     >
                       <span className="text-lg" aria-hidden="true">
                         {t.icon}
@@ -369,6 +501,66 @@ export default function FormularioCita({ abierto, onCerrar }) {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Paso 1.5 — Sub-opciones */}
+            {!enviado && paso === 1.5 && tratamientoPadre && (
+              <div>
+                <p className="text-sm text-[#7a6152] mb-2">
+                  Selecciona una opción de{" "}
+                  <span className="font-semibold text-[#4a3728]">
+                    {tratamientoPadre.nombre}
+                  </span>
+                </p>
+
+                <div className="flex flex-col gap-2">
+                  {tratamientoPadre.subopciones.map((sub) => (
+                    <button
+                      key={sub.nombre}
+                      onClick={() => {
+                        setSubopcionSeleccionada(sub);
+                        setForm({ ...form, tratamiento: sub.nombre }); // ← El nombre completo va al Excel
+                        avanzarPaso(2);
+                      }}
+                      className={`flex items-center justify-between border rounded-xl px-4 py-3 text-sm transition-all duration-300 text-left focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
+            ${
+              subopcionSeleccionada?.nombre === sub.nombre
+                ? "border-[#c9a882] bg-[#f5ede0] text-[#4a3728] shadow-md"
+                : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
+            }`}
+                    >
+                      <span className="font-medium">{sub.nombre}</span>
+                      <span className="text-[#c9a882] font-semibold text-xs whitespace-nowrap ml-2">
+                        {sub.precio}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setTratamientoPadre(null);
+                    setSubopcionSeleccionada(null);
+                    avanzarPaso(1);
+                  }}
+                  className="mt-4 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
+                >
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                  Volver a tratamientos
+                </button>
               </div>
             )}
 
