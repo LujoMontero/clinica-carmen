@@ -520,20 +520,29 @@ export default function FormularioCita({ abierto, onCerrar }) {
                       key={sub.nombre}
                       onClick={() => {
                         setSubopcionSeleccionada(sub);
-                        setForm({ ...form, tratamiento: sub.nombre }); // ← El nombre completo va al Excel
+                        setForm({ ...form, tratamiento: sub.nombre });
                         avanzarPaso(2);
                       }}
-                      className={`flex items-center justify-between border rounded-xl px-4 py-3 text-sm transition-all duration-300 text-left focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
-            ${
-              subopcionSeleccionada?.nombre === sub.nombre
-                ? "border-[#c9a882] bg-[#f5ede0] text-[#4a3728] shadow-md"
-                : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
-            }`}
+                      className={`flex flex-col border rounded-xl px-4 py-3 text-sm transition-all duration-300 text-left focus:outline-none focus:ring-2 focus:ring-[#c9a882] focus:ring-offset-2
+        ${
+          subopcionSeleccionada?.nombre === sub.nombre
+            ? "border-[#c9a882] bg-[#f5ede0] text-[#4a3728] shadow-md"
+            : "border-gray-200 text-gray-700 hover:border-[#c9a882]/50 hover:shadow-sm"
+        }`}
                     >
-                      <span className="font-medium">{sub.nombre}</span>
-                      <span className="text-[#c9a882] font-semibold text-xs whitespace-nowrap ml-2">
-                        {sub.precio}
-                      </span>
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-medium">{sub.nombre}</span>
+                        <span className="text-[#c9a882] font-semibold text-xs whitespace-nowrap ml-2">
+                          {sub.precio}
+                        </span>
+                      </div>
+
+                      {/* Nota visible ANTES de hacer clic */}
+                      {sub.nombre === "Evaluación médica" && (
+                        <p className="mt-1.5 text-xs text-[#7a6152] italic">
+                          * Se descuentan del total del tratamiento si se llegara a realizar alguno.
+                        </p>
+                      )}
                     </button>
                   ))}
                 </div>
