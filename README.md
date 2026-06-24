@@ -25,14 +25,15 @@ Sitio web profesional para la **Dra. Carmen Montero**, Médico Estético ubicada
 
 ## 🛠️ Stack tecnológico
 
-| Tecnología | Uso |
-|---|---|
-| React | Librería principal de UI |
-| Vite | Servidor de desarrollo y bundler |
-| Tailwind CSS v4 | Estilos con clases utilitarias |
-| EmailJS | Envío de correos sin backend |
-| Git + GitHub | Control de versiones |
-| Vercel | Hosting y despliegue automático |
+| Tecnología      | Uso                              |
+| --------------- | -------------------------------- |
+| React           | Librería principal de UI         |
+| Vite            | Servidor de desarrollo y bundler |
+| Tailwind CSS v4 | Estilos con clases utilitarias   |
+| EmailJS         | Envío de correos sin backend     |
+| Firebase        | Hosting y Cloud Functions        |
+| Git + GitHub    | Control de versiones             |
+| Vercel          | Hosting y despliegue automático  |
 
 ---
 
@@ -40,6 +41,7 @@ Sitio web profesional para la **Dra. Carmen Montero**, Médico Estético ubicada
 
 ```
 clinica-app/
+├── functions/               ← Firebase Cloud Functions
 ├── public/
 │   └── fotos/
 │       ├── foto1.jpeg       ← Hero principal
@@ -56,6 +58,8 @@ clinica-app/
 │   ├── App.jsx              ← Componente raíz
 │   ├── main.jsx             ← Punto de entrada
 │   └── index.css            ← Estilos globales (Tailwind)
+├── .firebaserc
+├── firebase.json
 ├── package.json
 └── vite.config.js
 ```
@@ -65,6 +69,7 @@ clinica-app/
 ## 🚀 Cómo correr el proyecto localmente
 
 ### Requisitos previos
+
 - Node.js v18 o superior
 - npm
 
@@ -72,10 +77,10 @@ clinica-app/
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/TU_USUARIO/clinica-carmen.git
+git clone https://github.com/LujoMontero/clinica-carmen.git
 
 # Entrar a la carpeta
-cd clinica-carmen/clinica-app
+cd clinica-carmen
 
 # Instalar dependencias
 npm install
@@ -84,11 +89,27 @@ npm install
 npm run dev
 ```
 
-Abre [http://localhost:5173](http://localhost:5173) en el navegador.
+Abre <http://localhost:5173> en el navegador.
+
+---
+
+## 🔑 Variables de entorno
+
+Crea un archivo `.env` en la raíz del proyecto con las siguientes claves de EmailJS:
+
+```env
+VITE_EMAILJS_SERVICE_ID=tu_service_id
+VITE_EMAILJS_TEMPLATE_CLIENTE=tu_template_cliente
+VITE_EMAILJS_TEMPLATE_DOCTORA=tu_template_doctora
+VITE_EMAILJS_PUBLIC_KEY=tu_public_key
+```
+
+> Las claves se obtienen desde el dashboard de [EmailJS](https://www.emailjs.com/).
 
 ---
 
 ### Templates de EmailJS
+
 - **Template cliente** — Confirmación con datos de la cita y botón Google Calendar
 - **Template doctora** — Notificación con datos del paciente y botón Google Calendar
 
@@ -108,14 +129,14 @@ Abre [http://localhost:5173](http://localhost:5173) en el navegador.
 
 ## 📞 Información de contacto
 
-| Campo | Dato |
-|---|---|
-| Doctora | Dra. Carmen Montero |
-| Especialidad | Médico Estético |
-| Ubicación | Av. Libertad 269, Piso 6, Of. 602 · Viña del Mar |
-| WhatsApp | +56 9 6432 2438 |
-| Correo | Dracarmenmontero01@gmail.com |
-| Instagram | [@dracarmen_montero](https://www.instagram.com/dracarmen_montero) |
+| Campo        | Dato                                                               |
+| ------------ | ------------------------------------------------------------------ |
+| Doctora      | Dra. Carmen Montero                                                |
+| Especialidad | Médico Estético                                                    |
+| Ubicación    | Av. Libertad 269, Piso 6, Of. 602 · Viña del Mar                   |
+| WhatsApp     | +56 9 6432 2438                                                    |
+| Correo       | Dracarmenmontero01@gmail.com                                       |
+| Instagram    | [@dracarmen\_montero](https://www.instagram.com/dracarmen_montero) |
 
 ---
 
@@ -139,14 +160,15 @@ git commit -m "descripción del cambio"
 git push
 ```
 
-Vercel detecta los cambios y despliega en 1-2 minutos.
+Vercel detecta los cambios y despliega en 1–2 minutos.
 
 ---
 
 ## 👨‍💻 Desarrollado por
 
 **Luis Montero** — Backend Developer  
-Valparaiso, Chile
+Valparaíso, Chile
+
 ---
 
 *© 2026 Dra. Carmen Montero · Médico Estético · Viña del Mar*
